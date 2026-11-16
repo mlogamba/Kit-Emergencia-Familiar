@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#173b32">
+<title>Kit Emergenza Familiare</title>
+<style>
+:root{--bg:#f4f6f2;--card:#fff;--ink:#18231f;--muted:#68756e;--green:#176b50;--line:#e2e8e2;--soft:#eaf3ed}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:#173b32;color:white;padding:25px 18px 22px;border-radius:0 0 22px 22px}
+.wrap{max-width:760px;margin:auto;padding:0 14px 36px}h1{font-size:25px;margin:0 0 5px}header p{margin:0;color:#d6e5dc;font-size:14px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.stat{background:#ffffff16;border:1px solid #ffffff25;border-radius:13px;padding:11px}.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:#d6e5dc}
+main{padding-top:15px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 2px 8px #15251a08}
+h2{font-size:17px;margin:0 0 12px}.waterbig{font-size:29px;font-weight:750;color:var(--green)}.sub{color:var(--muted);font-size:13px}
+.progress{height:10px;background:#e5ebe6;border-radius:20px;overflow:hidden;margin:10px 0 5px}.bar{height:100%;width:0;background:#23835f;transition:width .2s}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.controls button,.actions button{border:1px solid var(--line);background:white;color:var(--ink);border-radius:10px;padding:9px 12px;font-weight:600;font-size:13px}
+.controls button.active{background:var(--soft);border-color:#9fc7ae;color:#14543d}
+.section{margin:17px 0}.sectionhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;font-weight:700}.count{font-size:12px;color:var(--muted);font-weight:600}
+.item{display:flex;gap:11px;align-items:flex-start;padding:10px 2px;border-bottom:1px solid #edf0ed;cursor:pointer}.item:last-child{border-bottom:0}.item input{width:20px;height:20px;accent-color:var(--green);flex-shrink:0;margin:1px 0 0}.item.done span{text-decoration:line-through;color:#89938d}
+.wateritems{display:grid;gap:8px;margin-top:10px}.note{background:#fff8e7;border:1px solid #f0dfb6;padding:11px;border-radius:11px;font-size:13px;color:#68552a}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.actions button.primary{background:var(--green);color:white;border-color:var(--green)}footer{font-size:12px;color:var(--muted);text-align:center;padding:12px}
+@media(min-width:600px){header{padding:30px max(calc((100% - 730px)/2),24px)}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Kit di emergenza familiare</h1><p>Lista acquisti · 4 persone · autonomia obiettivo 7 giorni</p>
+<div class="stats"><div class="stat"><b id="percent">0%</b><span>ACQUISTI COMPLETATI</span></div><div class="stat"><b id="remaining">0</b><span>ARTICOLI DA COMPRARE</span></div></div>
+<div class="progress"><div class="bar" id="bar"></div></div><p id="counter">0 articoli acquistati</p>
+</div></header>
+<main class="wrap">
+<div class="card">
+<h2>💧 Riserva d'acqua separata dagli zaini</h2><div class="waterbig">84 litri</div>
+<div class="sub">Obiettivo indicativo: 3 L × 4 persone × 7 giorni. Peso totale circa 84 kg.</div>
+<div class="wateritems" id="water"></div>
+</div>
+<div class="note">Le spunte vengono salvate automaticamente su questo dispositivo. Per sicurezza, esporta una copia se vuoi conservarla o trasferirla.</div>
+<div class="note" id="storageWarn" style="display:none;margin-top:10px">⚠️ Il browser non permette di salvare le spunte (modalità privata o cookie/dati bloccati). Usa "Esporta lista" per non perderle.</div>
+<div class="controls">
+<button class="active" data-filter="all">Tutti</button><button data-filter="todo">Da comprare</button><button data-filter="done">Acquistati</button>
+</div>
+<div id="list"></div>
+<div class="actions"><button class="primary" id="export">Esporta lista</button><button id="reset">Azzera spunte</button></div>
+<footer>Controlla periodicamente scadenze, batterie, medicinali e stato dei materiali.</footer>
+</main>
+<script>
+const groups=[
+["🎒 Zaini e organizzazione",[
+["Zaino adulto 1 – 30/40 L","1"],["Zaino adulto 2 – 30/40 L","1"],["Piccolo zaino per bambini","1"],["Contenitori impermeabili","2"]]],
+["🥫 Alimentazione – 7 giorni",[
+["Pasta","2 kg"],["Riso","2 kg"],["Legumi in scatola","12 lattine"],["Tonno o carne in scatola","12 lattine"],["Zuppe pronte","8 confezioni"],["Crackers e gallette","2 kg"],["Frutta secca","1,5 kg"],["Barrette energetiche","24"],["Frutta in conserva","4 confezioni"],["Latte UHT","4 L"],["Olio","500 ml"],["Biscotti","1 kg"],["Sale e zucchero","1 confezione"],["Alimenti pronti senza cottura","scorta"],["Apriscatole manuale","1"]]],
+["🩹 Salute e primo soccorso",[
+["Kit pronto soccorso","1"],["Disinfettante, garze e bende","1 kit"],["Cerotti e cerotti per vesciche","1 confezione"],["Guanti monouso","1 confezione"],["Termometro","1"],["Antidolorifici e antipiretici","secondo necessità"],["Medicinali personali e pediatrici","secondo necessità"],["Farmaci per allergie, se necessari","secondo necessità"],["Mascherine FFP2","scorta"]]],
+["🔦 Energia e comunicazioni",[
+["Torce LED","2"],["Lampade frontali","2"],["Batterie di ricambio","1 confezione"],["Power bank da 20.000 mAh","2"],["Cavi USB compatibili","2–3"],["Radio a batterie o dinamo","1"],["Fischietti di emergenza","4"],["Pannello solare pieghevole (opzionale)","1"]]],
+["👕 Abbigliamento e igiene",[
+["Cambi completi","4"],["Calze di ricambio","8 paia"],["Giacche impermeabili","4"],["Coperte termiche","4"],["Poncho impermeabili","4"],["Guanti da lavoro","1 paio"],["Salviette umidificate","1 confezione"],["Spazzolini e dentifricio","4 + 1"],["Sapone e gel igienizzante","1 + 1"],["Carta igienica","1 rotolo"],["Sacchi della spazzatura resistenti","1 confezione"],["Prodotti igienici personali","secondo necessità"]]],
+["📄 Documenti e attrezzatura",[
+["Copie di documenti e tessere sanitarie","famiglia"],["Numeri telefonici importanti stampati","1 copia"],["Chiavetta USB con copie digitali protette","1"],["Contanti in banconote piccole","300–500 €"],["Copie delle chiavi di casa e automobile","1 set"],["Coltellino multiuso","1"],["Nastro americano e cordino","1 set"],["Penna e blocchetto","1 set"],["Cartina stradale cartacea della zona","1"]]],
+["🏠 Scorte domestiche aggiuntive",[
+["Estintore","1"],["Rilevatore di monossido di carbonio","1"],["Rilevatore di fumo","1"],["Coperte e sacchi a pelo","secondo necessità"],["Fornello da campeggio per uso esclusivamente esterno","1"],["Combustibile compatibile","scorta sicura"],["Prodotti per pulizia e disinfezione","scorta"],["Scorta igienica aggiuntiva","7 giorni"]]]
+];
+const water=[["Bottiglie da 5 L","12 · 60 L"],["Taniche alimentari da 5 L","4 · 20 L"],["Borracce da 1 L","4 · 4 L"],["Filtro per acqua potabile","1"],["Pastiglie potabilizzatrici","1 confezione"],["Contenitore pieghevole per acqua","1"]];
+const KEY="kitEmergenzaChecklist";
+let storageOK=true;
+function loadState(){
+ try{const raw=localStorage.getItem(KEY);const o=raw?JSON.parse(raw):{};return (o&&typeof o==="object")?o:{}}
+ catch(e){storageOK=false;return {}}
+}
+function saveState(){
+ try{localStorage.setItem(KEY,JSON.stringify(state));storageOK=true}
+ catch(e){storageOK=false}
+ const w=document.getElementById("storageWarn");if(w)w.style.display=storageOK?"none":"block";
+}
+let state=loadState();
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+let filter="all";
+const key=(g,i)=>"g"+g+"i"+i;
+function checkbox(id,label,qty){let checked=!!state[id];return `<label class="item ${checked?'done':''}"><input type="checkbox" data-id="${id}" ${checked?'checked':''}><span>${label}${qty?` <small class="sub">— ${qty}</small>`:""}</span></label>`}
+function render(){
+ const total=groups.reduce((n,g)=>n+g[1].length,0)+water.length;
+ const validIds=new Set(water.map((x,i)=>"w"+i));groups.forEach((g,gi)=>g[1].forEach((x,i)=>validIds.add(key(gi,i))));
+ const done=[...validIds].filter(id=>state[id]).length;
+ document.getElementById("percent").textContent=Math.round(done/total*100)+"%";
+ document.getElementById("remaining").textContent=total-done;
+ document.getElementById("counter").textContent=`${done} di ${total} articoli acquistati`;
+ document.getElementById("bar").style.width=(done/total*100)+"%";
+ document.getElementById("water").innerHTML=water.map((x,i)=>checkbox("w"+i,x[0],x[1])).join("");
+ document.getElementById("list").innerHTML=groups.map((g,gi)=>{
+  let items=g[1].map((x,i)=>({x,id:key(gi,i)})).filter(o=>filter==="all"||(filter==="done"&&state[o.id])||(filter==="todo"&&!state[o.id]));
+  let count=g[1].filter((x,i)=>state[key(gi,i)]).length;
+  return items.length?`<section class="section"><div class="sectionhead"><span>${g[0]}</span><span class="count">${count}/${g[1].length}</span></div>${items.map(o=>checkbox(o.id,o.x[0],o.x[1])).join("")}</section>`:"";
+ }).join("");
+  document.querySelectorAll("[data-filter]").forEach(b=>b.classList.toggle("active",b.dataset.filter===filter));
+}
+document.addEventListener("change",e=>{const id=e.target&&e.target.dataset&&e.target.dataset.id;if(!id)return;if(e.target.checked)state[id]=true;else delete state[id];saveState();render()});
+document.querySelectorAll("[data-filter]").forEach(b=>b.addEventListener("click",()=>{filter=b.dataset.filter;render()}));
+document.getElementById("reset").addEventListener("click",()=>{if(confirm("Vuoi azzerare tutte le spunte?")){state={};try{localStorage.removeItem(KEY)}catch(e){}render()}});
+document.getElementById("export").addEventListener("click",()=>{
+ let lines=["KIT DI EMERGENZA FAMILIARE – LISTA ACQUISTI",""];
+ groups.forEach((g,gi)=>{lines.push(g[0]);g[1].forEach((x,i)=>lines.push(`${state[key(gi,i)]?"[x]":"[ ]"} ${x[0]} – ${x[1]}`));lines.push("")});
+ lines.push("ACQUA E POTABILIZZAZIONE");water.forEach((x,i)=>lines.push(`${state["w"+i]?"[x]":"[ ]"} ${x[0]} – ${x[1]}`));
+ let blob=new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="lista-kit-emergenza.txt";a.click();URL.revokeObjectURL(a.href);
+});
+render();
+saveState();
+</script>
+</body></html>
