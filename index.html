@@ -42,6 +42,17 @@ h2{font-size:17px;margin:0 0 12px}.waterbig{font-size:29px;font-weight:750;color
 </div>
 <div id="list"></div>
 <div class="actions"><button class="primary" id="export">Esporta lista</button><button id="reset">Azzera spunte</button></div>
+<div class="card">
+<h2>🔄 Trasferisci le spunte su un altro browser o dispositivo</h2>
+<div class="sub" style="margin-bottom:10px">Copia il link e aprilo nell'altro browser (puoi inviartelo su WhatsApp o email), oppure usa il file di backup.</div>
+<div class="actions" style="margin:0">
+<button class="primary" id="copyLink">Copia link con le spunte</button>
+<button id="saveBackup">Salva backup (file)</button>
+<button id="loadBackup">Carica backup</button>
+<input type="file" id="backupFile" accept=".json,application/json" style="display:none">
+</div>
+<div class="sub" id="transferMsg" style="margin-top:8px"></div>
+</div>
 <footer>Controlla periodicamente scadenze, batterie, medicinali e stato dei materiali.</footer>
 </main>
 <script>
@@ -105,5 +116,36 @@ document.getElementById("export").addEventListener("click",()=>{
 });
 render();
 saveState();
+
+function msg(t){const e=document.getElementById("transferMsg");if(e)e.textContent=t}
+function activeIds(){return Object.keys(state).filter(k=>state[k])}
+function applyIds(ids){
+ if(!Array.isArray(ids))throw new Error("formato");
+ if(!confirm("Importare "+ids.length+" spunte? Sostituiranno quelle attuali."))return false;
+ state={};ids.forEach(id=>{if(typeof id==="string")state[id]=true});saveState();render();return true;
+}
+document.getElementById("copyLink").addEventListener("click",async()=>{
+ const code=btoa(unescape(encodeURIComponent(JSON.stringify(activeIds()))));
+ const url=location.origin+location.pathname+"#s="+code;
+ try{await navigator.clipboard.writeText(url);msg("Link copiato! Aprilo nell'altro browser.")}
+ catch(e){prompt("Copia questo link:",url)}
+});
+document.getElementById("saveBackup").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify({kit:"emergenza",ids:activeIds()})],{type:"application/json"});
+ const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup-kit-emergenza.json";a.click();URL.revokeObjectURL(a.href);
+ msg("Backup salvato. Caricalo nell'altro browser con \"Carica backup\".");
+});
+document.getElementById("loadBackup").addEventListener("click",()=>document.getElementById("backupFile").click());
+document.getElementById("backupFile").addEventListener("change",e=>{
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{try{const o=JSON.parse(r.result);if(applyIds(o.ids))msg("Backup caricato.")}catch(err){msg("File non valido.")}e.target.value=""};
+ r.readAsText(f);
+});
+(function importFromHash(){
+ const m=location.hash.match(/^#s=(.+)$/);if(!m)return;
+ try{const ids=JSON.parse(decodeURIComponent(escape(atob(m[1]))));if(applyIds(ids))msg("Spunte importate dal link.")}
+ catch(e){msg("Link non valido.")}
+ history.replaceState(null,"",location.pathname+location.search);
+})();
 </script>
 </body></html>
